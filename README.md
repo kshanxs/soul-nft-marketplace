@@ -1,6 +1,8 @@
-# NFT Marketplace V3
+# Soul NFT Marketplace
 
-Create an NFT marketplace on top of your NFT collection on **any** EVM-compatible blockchain.
+Discover the art that speaks to your soul on **Soul**, NFT Marketplace. Built on top of your NFT collection using Next.js, React, TypeScript, and thirdweb Marketplace V3 contracts.
+
+GitHub Repository: [kshanxs/soul-nft-marketplace](https://github.com/kshanxs/soul-nft-marketplace)
 
 ## Features
 
@@ -34,10 +36,12 @@ Deploy the marketplace to the same network as your NFT collection.
 
 ### Clone this repository
 
-Clone a copy of this repository and install the dependencies using the [thirdweb CLI](https://portal.thirdweb.com/cli):
+Clone a copy of this repository:
 
 ```bash
-npx thirdweb create --template marketplace-v3
+git clone https://github.com/kshanxs/soul-nft-marketplace.git
+cd soul-nft-marketplace
+npm install
 ```
 
 _Note: This requires [Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) and [Git](https://git-scm.com/downloads). [Yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable) is also recommended._
