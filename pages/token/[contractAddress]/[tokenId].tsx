@@ -357,45 +357,37 @@ export default function TokenPage({ nft, contractMetadata }: Props) {
 export const getStaticProps: GetStaticProps = async (context) => {
   const tokenId = context.params?.tokenId as string;
 
-  const sdk = new ThirdwebSDK(NETWORK);
-
-  const contract = await sdk.getContract(NFT_COLLECTION_ADDRESS);
-
-  const nft = await contract.erc721.get(tokenId);
-
-  let contractMetadata;
-
   try {
-    contractMetadata = await contract.metadata.get();
-  } catch (e) {}
+    const sdk = new ThirdwebSDK(NETWORK);
 
-  return {
-    props: {
-      nft,
-      contractMetadata: contractMetadata || null,
-    },
-    revalidate: 1, // https://nextjs.org/docs/basic-features/data-fetching/incremental-static-regeneration
-  };
+    const contract = await sdk.getContract(NFT_COLLECTION_ADDRESS);
+
+    const nft = await contract.erc721.get(tokenId);
+
+    let contractMetadata;
+
+    try {
+      contractMetadata = await contract.metadata.get();
+    } catch (e) {}
+
+    return {
+      props: {
+        nft,
+        contractMetadata: contractMetadata || null,
+      },
+      revalidate: 1, // https://nextjs.org/docs/basic-features/data-fetching/incremental-static-regeneration
+    };
+  } catch (error) {
+    console.error("Failed to fetch NFT data in getStaticProps:", error);
+    return {
+      notFound: true,
+    };
+  }
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const sdk = new ThirdwebSDK(NETWORK);
-
-  const contract = await sdk.getContract(NFT_COLLECTION_ADDRESS);
-
-  const nfts = await contract.erc721.getAll();
-
-  const paths = nfts.map((nft) => {
-    return {
-      params: {
-        contractAddress: NFT_COLLECTION_ADDRESS,
-        tokenId: nft.metadata.id,
-      },
-    };
-  });
-
   return {
-    paths,
-    fallback: "blocking", // can also be true or 'blocking'
+    paths: [],
+    fallback: "blocking",
   };
 };
