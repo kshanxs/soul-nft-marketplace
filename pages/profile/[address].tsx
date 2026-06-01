@@ -1,9 +1,4 @@
-import {
-  useContract,
-  useOwnedNFTs,
-  useValidDirectListings,
-  useValidEnglishAuctions,
-} from "@thirdweb-dev/react";
+import { useReadContract } from "thirdweb/react";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import Container from "../../components/Container/Container";
@@ -13,7 +8,12 @@ import Skeleton from "../../components/Skeleton/Skeleton";
 import {
   MARKETPLACE_ADDRESS,
   NFT_COLLECTION_ADDRESS,
+  NETWORK,
 } from "../../const/contractAddresses";
+import { getContract } from "thirdweb";
+import { getOwnedNFTs } from "thirdweb/extensions/erc721";
+import { getAllValidListings, getAllValidAuctions } from "thirdweb/extensions/marketplace";
+import { client } from "../../util/client";
 import styles from "../../styles/Profile.module.css";
 import randomColor from "../../util/randomColor";
 
@@ -27,28 +27,52 @@ const [randomColor1, randomColor2, randomColor3, randomColor4] = [
 export default function ProfilePage() {
   const router = useRouter();
   const [tab, setTab] = useState<"nfts" | "listings" | "auctions">("nfts");
+  const profileAddress = router.query.address as string;
 
-  const { contract: nftCollection } = useContract(NFT_COLLECTION_ADDRESS);
+  const nftCollection = getContract({
+    client,
+    chain: NETWORK,
+    address: NFT_COLLECTION_ADDRESS,
+  });
 
-  const { contract: marketplace } = useContract(
-    MARKETPLACE_ADDRESS,
-    "marketplace-v3"
+  const marketplace = getContract({
+    client,
+    chain: NETWORK,
+    address: MARKETPLACE_ADDRESS,
+  });
+
+  const { data: ownedNfts, isLoading: loadingOwnedNfts } = useReadContract(
+    getOwnedNFTs,
+    {
+      contract: nftCollection,
+      owner: profileAddress,
+      queryOptions: {
+        enabled: !!profileAddress,
+      },
+    }
   );
 
-  const { data: ownedNfts, isLoading: loadingOwnedNfts } = useOwnedNFTs(
-    nftCollection,
-    router.query.address as string
+  const { data: allDirectListings, isLoading: loadingDirects } = useReadContract(
+    getAllValidListings,
+    {
+      contract: marketplace,
+    }
   );
 
-  const { data: directListings, isLoading: loadingDirects } =
-    useValidDirectListings(marketplace, {
-      seller: router.query.address as string,
-    });
+  const directListings = allDirectListings?.filter(
+    (l) => l.creatorAddress.toLowerCase() === profileAddress?.toLowerCase()
+  );
 
-  const { data: auctionListings, isLoading: loadingAuctions } =
-    useValidEnglishAuctions(marketplace, {
-      seller: router.query.address as string,
-    });
+  const { data: allAuctionListings, isLoading: loadingAuctions } = useReadContract(
+    getAllValidAuctions,
+    {
+      contract: marketplace,
+    }
+  );
+
+  const auctionListings = allAuctionListings?.filter(
+    (l) => l.creatorAddress.toLowerCase() === profileAddress?.toLowerCase()
+  );
 
   return (
     <Container maxWidth="lg">
@@ -123,7 +147,7 @@ export default function ProfilePage() {
           <p>Nothing for sale yet! Head to the sell tab to list an NFT.</p>
         ) : (
           directListings?.map((listing) => (
-            <ListingWrapper listing={listing} key={listing.id} />
+            <ListingWrapper listing={listing} key={listing.id.toString()} />
           ))
         )}
       </div>
@@ -139,7 +163,7 @@ export default function ProfilePage() {
           <p>Nothing for sale yet! Head to the sell tab to list an NFT.</p>
         ) : (
           auctionListings?.map((listing) => (
-            <ListingWrapper listing={listing} key={listing.id} />
+            <ListingWrapper listing={listing} key={listing.id.toString()} />
           ))
         )}
       </div>

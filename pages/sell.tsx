@@ -1,24 +1,32 @@
-import {
-  ThirdwebNftMedia,
-  useAddress,
-  useContract,
-  useOwnedNFTs,
-} from "@thirdweb-dev/react";
+import { MediaRenderer, useActiveAccount, useReadContract } from "thirdweb/react";
 import React, { useState } from "react";
 import Container from "../components/Container/Container";
 import NFTGrid from "../components/NFT/NFTGrid";
-import { NFT_COLLECTION_ADDRESS } from "../const/contractAddresses";
+import { NFT_COLLECTION_ADDRESS, NETWORK } from "../const/contractAddresses";
 import tokenPageStyles from "../styles/Token.module.css";
-import { NFT as NFTType } from "@thirdweb-dev/sdk";
+import type { NFT } from "thirdweb";
+import { getContract } from "thirdweb";
+import { getOwnedNFTs } from "thirdweb/extensions/erc721";
+import { client } from "../util/client";
 import SaleInfo from "../components/SaleInfo/SaleInfo";
 
 export default function Sell() {
   // Load all of the NFTs from the NFT Collection
-  const { contract } = useContract(NFT_COLLECTION_ADDRESS);
-  const address = useAddress();
-  const { data, isLoading } = useOwnedNFTs(contract, address);
+  const contract = getContract({
+    client,
+    chain: NETWORK,
+    address: NFT_COLLECTION_ADDRESS,
+  });
+  const address = useActiveAccount()?.address;
+  const { data, isLoading } = useReadContract(getOwnedNFTs, {
+    contract,
+    owner: address || "",
+    queryOptions: {
+      enabled: !!address,
+    },
+  });
 
-  const [selectedNft, setSelectedNft] = useState<NFTType>();
+  const [selectedNft, setSelectedNft] = useState<NFT>();
 
   return (
     <Container maxWidth="lg">
@@ -41,8 +49,9 @@ export default function Sell() {
         <div className={tokenPageStyles.container} style={{ marginTop: 0 }}>
           <div className={tokenPageStyles.metadataContainer}>
             <div className={tokenPageStyles.imageContainer}>
-              <ThirdwebNftMedia
-                metadata={selectedNft.metadata}
+              <MediaRenderer
+                client={client}
+                src={selectedNft.metadata.image}
                 className={tokenPageStyles.image}
               />
               <button
@@ -62,7 +71,7 @@ export default function Sell() {
               {selectedNft.metadata.name}
             </h1>
             <p className={tokenPageStyles.collectionName}>
-              Token ID #{selectedNft.metadata.id}
+              Token ID #{selectedNft.id.toString()}
             </p>
 
             <div className={tokenPageStyles.pricingContainer}>

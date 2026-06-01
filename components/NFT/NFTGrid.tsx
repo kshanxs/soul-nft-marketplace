@@ -1,15 +1,15 @@
-import type { NFT as NFTType } from "@thirdweb-dev/sdk";
+import type { NFT } from "thirdweb";
 import Link from "next/link";
 import React from "react";
 import { NFT_COLLECTION_ADDRESS } from "../../const/contractAddresses";
 import Skeleton from "../Skeleton/Skeleton";
-import NFT from "./NFT";
+import NFTComponent from "./NFT";
 import styles from "../../styles/Buy.module.css";
 
 type Props = {
   isLoading: boolean;
-  data: NFTType[] | undefined;
-  overrideOnclickBehavior?: (nft: NFTType) => void;
+  data: NFT[] | undefined;
+  overrideOnclickBehavior?: (nft: NFT) => void;
   emptyText?: string;
 };
 
@@ -31,19 +31,19 @@ export default function NFTGrid({
         data.map((nft) =>
           !overrideOnclickBehavior ? (
             <Link
-              href={`/token/${NFT_COLLECTION_ADDRESS}/${nft.metadata.id}`}
-              key={nft.metadata.id}
+              href={`/token/${NFT_COLLECTION_ADDRESS}/${nft.id.toString()}`}
+              key={nft.id.toString()}
               className={styles.nftContainer}
             >
-              <NFT nft={nft} />
+              <NFTComponent nft={nft} />
             </Link>
           ) : (
             <div
-              key={nft.metadata.id}
+              key={nft.id.toString()}
               className={styles.nftContainer}
               onClick={() => overrideOnclickBehavior(nft)}
             >
-              <NFT nft={nft} />
+              <NFTComponent nft={nft} />
             </div>
           )
         )

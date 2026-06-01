@@ -74,6 +74,62 @@ export const NFT_COLLECTION_ADDRESS = "";
 export const ETHERSCAN_URL = "https://mumbai.polygonscan.com";
 ```
 
+## thirdweb SDK v5 Migration Guide
+
+This project has been updated from the legacy thirdweb SDK v3 to the latest **thirdweb SDK v5** (the unified `thirdweb` package). 
+
+### Why We Migrated
+1. **Functional and Modular API**: SDK v5 moves away from a monolithic, class-based SDK to a tree-shakable function-based design. This dramatically reduces the client-side bundle size since you only bundle the exact features you use.
+2. **Enhanced Performance**: It uses optimized RPC handling and under-the-hood caching.
+3. **Future-Proof Infrastructure**: Deprecated testnets (like Polygon Mumbai) have been phased out. The new architecture is compatible with all modern networks including **Polygon Amoy** and **Sepolia**.
+
+---
+
+### What Changed
+
+* **Client Initialization**: Instead of passing custom providers with preset chain properties, we now initialize a unified `thirdwebClient` in [client.ts](file:///Users/shubh/Developer/marketplace-v3-master/util/client.ts) which handles RPC connectivity, storage gateways, and wallet connection state.
+* **Wallet Connection**: We replaced `<ConnectWallet>` with the modern, customizable `<ConnectButton>` and swapped `useAddress()` for `useActiveAccount()?.address`.
+* **Rendering NFT Media**: The legacy `<ThirdwebNftMedia>` component has been replaced with `<MediaRenderer>` which supports automatic format detection and fetches assets smoothly through the thirdweb IPFS gateway.
+* **Functional Read Hooks**: Legacy hooks like `useNFTs`, `useOwnedNFTs`, `useValidDirectListings`, and `useValidEnglishAuctions` were replaced by the universal **`useReadContract`** hook combined with standard extensions (like `getNFTs`, `getOwnedNFTs`, `getAllValidListings`, and `getAllValidAuctions`).
+* **Direct Asset Resolution**: In SDK v5, listings and auctions returned by the marketplace extensions already include the resolved `asset` NFT metadata. We simplified the `ListingWrapper` component to render the NFT directly from the listing, avoiding redundant RPC fetches.
+* **Unified Write Transactions**: The old `<Web3Button>` has been upgraded to **`<TransactionButton>`**. Form data is compiled into "prepared transactions" using the marketplace extensions (`createListing`, `createAuction`, `buyFromListing`, `buyoutAuction`, `bidInAuction`, `makeOffer`) and signed in a single button execution flow.
+
+---
+
+### How the New SDK Works
+
+1. **Client Setup**: Ensure you create a thirdweb Client ID on the thirdweb dashboard and set it in your environment:
+   ```env
+   NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_client_id_here
+   ```
+2. **Define Chain and Contracts**: In [contractAddresses.ts](file:///Users/shubh/Developer/marketplace-v3-master/const/contractAddresses.ts), chains are defined using `defineChain(chainId)`. Contracts are initialized on the client using:
+   ```typescript
+   import { getContract } from "thirdweb";
+   
+   const contract = getContract({
+     client,
+     chain: NETWORK,
+     address: NFT_COLLECTION_ADDRESS,
+   });
+   ```
+3. **Read Data**: Pass the contract and parameters to the extension function inside `useReadContract`:
+   ```typescript
+   const { data: nfts, isLoading } = useReadContract(getNFTs, {
+     contract,
+     start: 0,
+     count: 10,
+   });
+   ```
+4. **Write Transactions**: Return a prepared transaction from the `transaction` prop of the `<TransactionButton>`:
+   ```tsx
+   <TransactionButton
+     transaction={() => buyFromListing({ contract, listingId, quantity: 1n, recipient })}
+     onSuccess={() => console.log("Success!")}
+   >
+     Buy NFT
+   </TransactionButton>
+   ```
+
 ## Join our Discord!
 
 For any questions, suggestions, join our discord at [https://discord.gg/thirdweb](https://discord.gg/thirdweb).

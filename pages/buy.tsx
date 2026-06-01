@@ -1,13 +1,24 @@
-import { useContract, useNFTs } from "@thirdweb-dev/react";
+import { getContract } from "thirdweb";
+import { useReadContract } from "thirdweb/react";
+import { getNFTs } from "thirdweb/extensions/erc721";
 import React from "react";
 import Container from "../components/Container/Container";
 import NFTGrid from "../components/NFT/NFTGrid";
-import { NFT_COLLECTION_ADDRESS } from "../const/contractAddresses";
+import { NFT_COLLECTION_ADDRESS, NETWORK } from "../const/contractAddresses";
+import { client } from "../util/client";
 
 export default function Buy() {
-  // Load all of the NFTs from the NFT Collection
-  const { contract } = useContract(NFT_COLLECTION_ADDRESS);
-  const { data, isLoading } = useNFTs(contract);
+  const contract = getContract({
+    client,
+    chain: NETWORK,
+    address: NFT_COLLECTION_ADDRESS,
+  });
+
+  const { data, isLoading } = useReadContract(getNFTs, {
+    contract,
+    start: 0,
+    count: 100,
+  });
 
   return (
     <Container maxWidth="lg">

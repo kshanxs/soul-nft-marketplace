@@ -1,15 +1,14 @@
-import {
-  ThirdwebNftMedia,
-  useContract,
-  useValidDirectListings,
-  useValidEnglishAuctions,
-} from "@thirdweb-dev/react";
-import { NFT } from "@thirdweb-dev/sdk";
+import { MediaRenderer, useReadContract } from "thirdweb/react";
+import type { NFT } from "thirdweb";
+import { getContract } from "thirdweb";
 import React from "react";
 import {
   MARKETPLACE_ADDRESS,
   NFT_COLLECTION_ADDRESS,
+  NETWORK,
 } from "../../const/contractAddresses";
+import { client } from "../../util/client";
+import { getAllValidListings, getAllValidAuctions } from "thirdweb/extensions/marketplace";
 import Skeleton from "../Skeleton/Skeleton";
 import styles from "./NFT.module.css";
 
@@ -18,30 +17,49 @@ type Props = {
 };
 
 export default function NFTComponent({ nft }: Props) {
-  const { contract: marketplace, isLoading: loadingContract } = useContract(
-    MARKETPLACE_ADDRESS,
-    "marketplace-v3"
-  );
+  const marketplace = getContract({
+    client,
+    chain: NETWORK,
+    address: MARKETPLACE_ADDRESS,
+  });
 
   // 1. Load if the NFT is for direct listing
-  const { data: directListing, isLoading: loadingDirect } =
-    useValidDirectListings(marketplace, {
-      tokenContract: NFT_COLLECTION_ADDRESS,
-      tokenId: nft.metadata.id,
-    });
+  const { data: allDirectListings, isLoading: loadingDirect } = useReadContract(
+    getAllValidListings,
+    {
+      contract: marketplace,
+    }
+  );
+
+  const directListing = allDirectListings?.filter(
+    (listing) =>
+      listing.assetContractAddress.toLowerCase() ===
+        NFT_COLLECTION_ADDRESS.toLowerCase() &&
+      listing.tokenId === nft.id
+  );
 
   // 2. Load if the NFT is for auction
-  const { data: auctionListing, isLoading: loadingAuction } =
-    useValidEnglishAuctions(marketplace, {
-      tokenContract: NFT_COLLECTION_ADDRESS,
-      tokenId: nft.metadata.id,
-    });
+  const { data: allAuctionListings, isLoading: loadingAuction } = useReadContract(
+    getAllValidAuctions,
+    {
+      contract: marketplace,
+    }
+  );
+
+  const auctionListing = allAuctionListings?.filter(
+    (listing) =>
+      listing.assetContractAddress.toLowerCase() ===
+        NFT_COLLECTION_ADDRESS.toLowerCase() &&
+      listing.tokenId === nft.id
+  );
+
+  const loadingContract = false;
 
   return (
     <>
-      <ThirdwebNftMedia metadata={nft.metadata} className={styles.nftImage} />
+      <MediaRenderer client={client} src={nft.metadata.image} className={styles.nftImage} />
 
-      <p className={styles.nftTokenId}>Token ID #{nft.metadata.id}</p>
+      <p className={styles.nftTokenId}>Token ID #{nft.id.toString()}</p>
       <p className={styles.nftName}>{nft.metadata.name}</p>
 
       <div className={styles.priceContainer}>
