@@ -129,7 +129,3 @@ This project has been updated from the legacy thirdweb SDK v3 to the latest **th
      Buy NFT
    </TransactionButton>
    ```
-
-## Join our Discord!
-
-For any questions, suggestions, join our discord at [https://discord.gg/thirdweb](https://discord.gg/thirdweb).
